@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exception Matching Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+      margin: 20px;
+      gap: 40px;
+    }
+
+    .main-area {
+      display: flex;
+      flex-direction: row;
+      gap: 40px;
+    }
+
+    .image-bin-column {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .image-bin {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    img.question-img {
+      width: 227px;
+      height: 227px;
+      object-fit: contain;
+      border: 1px solid #ccc;
+    }
+
+    .drop-bin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 250px;
+      height: 60px;
+      border: 2px dashed gray;
+      background-color: #f8f8f8;
+      font-weight: bold;
+      padding: 0;
+    }
+
+    .labels-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
+      min-height: 100px;
+    }
+
+    .label {
+      width: 250px;
+      padding: 12px;
+      background-color: lightblue;
+      border: 1px solid black;
+      cursor: move;
+      text-align: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    .submit-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-top: 40px;
+      min-height: 150px;
+    }
+
+    #submit {
+      padding: 14px 36px;
+      font-size: 20px;
+    }
+
+    #score {
+      font-size: 28px;
+      font-weight: bold;
+      animation: blink 1s step-start infinite;
+      text-align: center;
+    }
+
+    #logo {
+      max-width: 200px;
+      margin-top: 10px;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-area">
+    <div class="image-bin-column" id="column1"></div>
+    <div class="image-bin-column" id="column2"></div>
+    <div class="image-bin-column" id="column3"></div>
+    <div class="labels-column" id="labels">
+      <!-- Labels will be inserted above this -->
+      <div class="submit-area">
+        <button id="submit">Submit</button>
+        <div id="score"></div>
+        <img id="logo" src="BCRS Logo.jpg" alt="BCRS Logo">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const labels = [
+      "ZeroDivisionError",
+      "IndexError",
+      "FileNotFoundError",
+      "TypeError",
+      "AttributeError",
+      "ImportError",
+      "KeyError",
+      "NameError",
+      "ValueError"
+    ];
+
+    const shuffled = labels
+      .map((label, index) => ({ label, index }))
+      .sort(() => Math.random() - 0.5);
+
+    const columns = [
+      document.getElementById("column1"),
+      document.getElementById("column2"),
+      document.getElementById("column3")
+    ];
+
+    for (let i = 0; i < 9; i++) {
+      const row = document.createElement("div");
+      row.className = "image-bin";
+
+      const img = document.createElement("img");
+      img.src = `${i + 1}.png`;
+      img.className = "question-img";
+
+      const bin = document.createElement("div");
+      bin.className = "drop-bin";
+      bin.dataset.index = i;
+      bin.ondragover = e => e.preventDefault();
+      bin.ondrop = e => {
+        e.preventDefault();
+        const labelId = e.dataTransfer.getData("text");
+        const label = document.getElementById(labelId);
+        if (bin.firstChild) return;
+        bin.appendChild(label);
+      };
+
+      row.appendChild(img);
+      row.appendChild(bin);
+      columns[Math.floor(i / 3)].appendChild(row);
+    }
+
+    const labelsContainer = document.getElementById("labels");
+
+    shuffled.forEach((item, i) => {
+      const lbl = document.createElement("div");
+      lbl.className = "label";
+      lbl.id = "label" + i;
+      lbl.draggable = true;
+      lbl.textContent = item.label;
+      lbl.dataset.index = item.index;
+
+      lbl.ondragstart = e => {
+        e.dataTransfer.setData("text", lbl.id);
+      };
+
+      // Insert label above the submit area to prevent submit from moving
+      const submitArea = document.querySelector(".submit-area");
+      labelsContainer.insertBefore(lbl, submitArea);
+    });
+
+    const submitBtn = document.getElementById("submit");
+    submitBtn.onclick = () => {
+      let score = 0;
+      const bins = document.querySelectorAll(".drop-bin");
+      bins.forEach((bin, i) => {
+        if (
+          bin.firstChild &&
+          parseInt(bin.firstChild.dataset.index) === i
+        ) {
+          score++;
+        }
+      });
+
+      document.getElementById("score").textContent = `Score: ${score}/9`;
+    };
+  </script>
+</body>
+</html>
